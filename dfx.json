@@ -1,0 +1,17 @@
+{
+  "canisters": {
+    "ic_backend": {
+      "candid": "src/ic_backend/ic_backend.did",
+      "package": "ic_backend",
+      "type": "rust"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}

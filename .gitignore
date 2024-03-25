@@ -27,9 +27,20 @@ yarn-error.*
 # macOS
 .DS_Store
 *.pem
+**/.DS_Store
 
 # local env files
+.env
 .env*.local
 
 # typescript
 *.tsbuildinfo
+
+# dfx temporary files
+.dfx/
+
+# generated files
+**/declarations/
+
+# rust
+target/

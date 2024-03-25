@@ -1,0 +1,29 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "cp ../../.env .env && expo start",
+    "android": "cp ../../.env .env && expo run:android",
+    "ios": "cp ../../.env .env && expo run:ios"
+  },
+  "dependencies": {
+    "@dfinity/identity": "^1.1.1",
+    "@react-native-async-storage/async-storage": "1.21.0",
+    "expo": "~50.0.14",
+    "expo-constants": "~15.4.5",
+    "expo-dev-client": "~3.3.11",
+    "expo-status-bar": "~1.11.1",
+    "fast-text-encoding": "^1.0.6",
+    "react": "18.2.0",
+    "react-native": "0.73.6",
+    "react-native-auth0": "^3.1.0",
+    "react-native-get-random-values": "~1.8.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0",
+    "@types/react": "~18.2.45",
+    "typescript": "^5.1.3"
+  },
+  "private": true
+}

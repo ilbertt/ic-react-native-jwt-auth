@@ -1,0 +1,19 @@
+{
+  "name": "app_backend",
+  "module": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "bun --env-file=../../.env run src/index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@types/express": "^4.17.21",
+    "express": "^4.19.1",
+    "express-oauth2-jwt-bearer": "^1.6.0"
+  }
+}

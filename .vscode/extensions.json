@@ -1,0 +1,7 @@
+{
+  "recommendations": [
+    "oven.bun-vscode",
+    "expo.vscode-expo-tools",
+    "rust-lang.rust-analyzer"
+  ]
+}

@@ -1,0 +1,2 @@
+export const AUTH0_TENANT_DOMAIN = process.env.EXPO_PUBLIC_AUTH0_TENANT_DOMAIN!;
+export const AUTH0_CLIENT_ID = process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID!;
