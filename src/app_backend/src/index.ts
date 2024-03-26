@@ -1,10 +1,16 @@
 import express from 'express';
 import { auth } from 'express-oauth2-jwt-bearer';
 import { Principal } from '@dfinity/principal';
+import { Ed25519PublicKey } from '@dfinity/identity';
 
 type ApiResponse = {
   principal: string;
   user_id: string;
+}
+
+const principalFromNonce = (nonce: string) => {
+  const publicKey = Ed25519PublicKey.fromDer(Buffer.from(nonce, 'hex').buffer as ArrayBuffer);
+  return Principal.selfAuthenticating(new Uint8Array(publicKey.toDer()));
 }
 
 const checkJwt = auth({
@@ -19,7 +25,7 @@ const checkJwt = auth({
 
       // check if nonce is a valid principal
       try {
-        Principal.fromText(claims.nonce as string);
+        principalFromNonce(claims.nonce as string);
         console.log('nonce claim is a valid principal');
         return true;
       } catch (e) {
@@ -41,7 +47,7 @@ app.get('/authenticated', checkJwt, function (req, res) {
     return;
   }
 
-  const principal = Principal.fromText(auth.payload.nonce as string);
+  const principal = principalFromNonce(auth.payload.nonce as string);
 
   const response = {
     principal: principal.toText(),

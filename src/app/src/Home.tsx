@@ -2,8 +2,10 @@ import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import { StyleSheet, Text, View, Button, Alert, Pressable } from 'react-native';
 import { type Credentials, useAuth0 } from 'react-native-auth0';
+import { Principal } from '@dfinity/principal';
 import { fetchApi, type ApiResponse } from './lib/backend';
 import { useIcAuth } from './lib/ic';
+import { toHex } from './lib/utils';
 
 const Home = () => {
   const { authorize, clearSession, user, error: auth0Error, isLoading: auth0IsLoading } = useAuth0();
@@ -17,23 +19,34 @@ const Home = () => {
     try {
       const res = await fetchApi(jwt);
       console.log('Backend API response:', res);
+
+      if (res.status === 200 && res.data) {
+        if (Principal.fromText(res.data.principal).compareTo(baseIdentity!.getPrincipal()) !== 'eq') {
+          throw new Error('Principal mismatch');
+        }
+      }
+
       setApiResponse(res);
     } catch (error) {
       console.error(error);
-    } finally {
-      setIsLoading(false);
     }
-  }
+
+    setIsLoading(false);
+  };
 
   const onLogin = async () => {
     try {
-      const credentials = await authorize({
-        nonce: baseIdentity?.getPrincipal().toText(),
-      });
-      console.log('Auth0 credentials:', credentials);
-      setCredentials(credentials);
+      if (!baseIdentity) {
+        throw new Error('No base identity');
+      }
 
-      await callBackendApi(credentials?.idToken);
+      const _credentials = await authorize({
+        nonce: toHex(baseIdentity.getPublicKey().toDer()),
+      });
+      console.log('Auth0 credentials:', _credentials);
+      setCredentials(_credentials);
+
+      await callBackendApi(_credentials?.idToken);
     } catch (e) {
       console.error(e);
       Alert.alert('Error logging in', (e as Error).message);
