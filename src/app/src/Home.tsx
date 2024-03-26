@@ -3,9 +3,9 @@ import { useState } from 'react';
 import { StyleSheet, Text, View, Button, Alert, Pressable } from 'react-native';
 import { type Credentials, useAuth0 } from 'react-native-auth0';
 import { Principal } from '@dfinity/principal';
+import { toHex } from '@dfinity/agent';
 import { fetchApi, type ApiResponse } from './lib/backend';
 import { useIcAuth } from './lib/ic';
-import { toHex } from './lib/utils';
 
 const Home = () => {
   const { authorize, clearSession, user, error: auth0Error, isLoading: auth0IsLoading } = useAuth0();
@@ -40,13 +40,13 @@ const Home = () => {
         throw new Error('No base identity');
       }
 
-      const _credentials = await authorize({
+      const res = await authorize({
         nonce: toHex(baseIdentity.getPublicKey().toDer()),
       });
-      console.log('Auth0 credentials:', _credentials);
-      setCredentials(_credentials);
+      console.log('Auth0 credentials:', res);
+      setCredentials(res);
 
-      await callBackendApi(_credentials?.idToken);
+      await callBackendApi(res?.idToken);
     } catch (e) {
       console.error(e);
       Alert.alert('Error logging in', (e as Error).message);
@@ -68,7 +68,7 @@ const Home = () => {
     return <View style={styles.container}><Text>Loading...</Text></View>;
   }
 
-  const auth0LoggedIn = user !== undefined && user !== null;
+  const auth0LoggedIn = credentials && credentials.idToken && user;
 
   return (
     <View style={styles.container}>
@@ -95,7 +95,6 @@ const Home = () => {
         >
           <Text style={styles.statusButtonText}>Refresh</Text>
         </Pressable>
-        {auth0Error && <Text style={styles.errorMessage}>{auth0Error.message}</Text>}
       </View>
 
       <StatusBar style="auto" />

@@ -44,3 +44,5 @@ yarn-error.*
 
 # rust
 target/
+
+data/

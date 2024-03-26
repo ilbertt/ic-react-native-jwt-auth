@@ -1,9 +1,20 @@
 {
   "canisters": {
     "ic_backend": {
+      "type": "custom",
+      "wasm": "./target/wasm32-unknown-unknown/release/ic_backend.wasm",
       "candid": "src/ic_backend/ic_backend.did",
       "package": "ic_backend",
-      "type": "rust"
+      "build": ["./scripts/build-canister.sh"],
+      "declarations": {
+        "bindings": ["js", "ts"],
+        "output": "./src/app/src/declarations"
+      },
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ]
     }
   },
   "defaults": {

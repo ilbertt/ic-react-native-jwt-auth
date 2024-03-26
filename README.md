@@ -19,7 +19,7 @@ Follow these steps to configure Auth0:
     - `io.icp0.jwtauthdemo.auth0://<YOUR_AUTH0_TENANT_DOMAIN>/ios/io.icp0.jwtauthdemo/callback`
     - `io.icp0.jwtauthdemo.auth0://<YOUR_AUTH0_TENANT_DOMAIN>/android/io.icp0.jwtauthdemo/callback`
 
-    Where `<YOUR_AUTH0_TENANT_DOMAIN>` is the Auth0 Tenant domain and `io.icp0.jwtauthdemo` is both the **Android Package Name** and **iOS Bundle Identifier**, as configured in the [app.json](./src/app/app.json) file.
+    Where `<YOUR_AUTH0_TENANT_DOMAIN>` is the Auth0 Tenant domain and `io.icp0.jwtauthdemo` is both the **Android Package Name** and **iOS Bundle Identifier**, as configured in the [app.config.js](./src/app/app.config.js) file.
 4. In the _Dashboard > Applications > YOUR_APP > Credentials_ tab, set the **Authentication Method** to **None** (instead of **Client Secret (Post)**)
 
 The 1st step of the Auth0 React Native [Quickstart interactive guide](https://auth0.com/docs/quickstart/native/react-native-expo/interactive) can be helpful too.
