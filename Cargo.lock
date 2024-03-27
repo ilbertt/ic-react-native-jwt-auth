@@ -372,6 +372,7 @@ checksum = "a54b5297861c651551676e8c43df805dad175cc33bc97dbd992edbbb85dcbcdf"
 name = "ic_backend"
 version = "0.1.0"
 dependencies = [
+ "base64",
  "candid",
  "getrandom",
  "hex",

@@ -9,10 +9,11 @@ import { useIcAuth } from './lib/ic';
 
 const Home = () => {
   const { authorize, clearSession, user, error: auth0Error, isLoading: auth0IsLoading } = useAuth0();
-  const { baseIdentity, isReady } = useIcAuth();
+  const { baseIdentity, backendActor, isReady } = useIcAuth();
   const [credentials, setCredentials] = useState<Credentials>();
   const [isLoading, setIsLoading] = useState(false);
   const [apiResponse, setApiResponse] = useState<ApiResponse>();
+  const [canisterResponse, setCanisterResponse] = useState<string>();
 
   const callBackendApi = async (jwt?: string) => {
     setIsLoading(true);
@@ -34,6 +35,27 @@ const Home = () => {
     setIsLoading(false);
   };
 
+  const callCanister = async (jwt?: string) => {
+    setIsLoading(true);
+    try {
+      if (!backendActor) {
+        throw new Error('No backend actor');
+      }
+
+      if (!jwt) {
+        throw new Error('No jwt');
+      }
+
+      const res = await backendActor.login(jwt);
+      console.log('Canister response:', res);
+      setCanisterResponse(res);
+    } catch (e) {
+      console.error(e);
+    }
+
+    setIsLoading(false);
+  };
+
   const onLogin = async () => {
     try {
       if (!baseIdentity) {
@@ -45,6 +67,8 @@ const Home = () => {
       });
       console.log('Auth0 credentials:', res);
       setCredentials(res);
+
+      await callCanister(res?.idToken);
 
       await callBackendApi(res?.idToken);
     } catch (e) {
@@ -81,7 +105,7 @@ const Home = () => {
 
       <View style={styles.statusContainer}>
         <Text style={styles.statusTitle}>Auth0 status:</Text>
-        {auth0LoggedIn && <Text>You are logged in as {user.name}</Text>}
+        {auth0LoggedIn && <Text>Logged in with sub: <Text style={styles.subText}>{user.sub}</Text></Text>}
         {!auth0LoggedIn && <Text>You are not logged in</Text>}
         {auth0Error && <Text style={styles.errorMessage}>{auth0Error.message}</Text>}
       </View>
@@ -92,6 +116,17 @@ const Home = () => {
         {(apiResponse && apiResponse!.status === 200) && <Text>You are authenticated!</Text>}
         <Pressable
           onPress={() => callBackendApi(credentials?.idToken)}
+        >
+          <Text style={styles.statusButtonText}>Refresh</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.statusContainer}>
+        <Text style={styles.statusTitle}>IC Backend status:</Text>
+        {(!canisterResponse) && <Text>You are not logged in</Text>}
+        {(canisterResponse) && <Text>Logged in with sub: <Text style={styles.subText}>{canisterResponse}</Text></Text>}
+        <Pressable
+          onPress={() => callCanister(credentials?.idToken)}
         >
           <Text style={styles.statusButtonText}>Refresh</Text>
         </Pressable>
@@ -134,6 +169,9 @@ const styles = StyleSheet.create({
   errorMessage: {
     color: 'red',
   },
+  subText: {
+    fontWeight: 'bold',
+  }
 });
 
 export default Home;

@@ -6,7 +6,8 @@ import { ActorSubclass } from '@dfinity/agent';
 import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createActor } from '../declarations';
-import { _SERVICE } from '../declarations/ic_backend.did';
+import { type _SERVICE } from '../declarations/ic_backend.did';
+import { HOST_IP } from './common';
 
 const IC_BASE_IDENTITY_STORAGE_KEY = 'ic-base-identity';
 const IC_BACKEND_CANISTER_ID = Constants.expoConfig?.extra?.IC_BACKEND_CANISTER_ID;
@@ -41,6 +42,18 @@ export const useIcAuth = (): IcAuth => {
       const actor = createActor(IC_BACKEND_CANISTER_ID, {
         agentOptions: {
           identity,
+          host: DFX_NETWORK === 'local' ? `http://${HOST_IP}:4943` : 'https://icp-api.io',
+          fetchOptions: {
+            reactNative: {
+              __nativeResponseType: "base64",
+            },
+          },
+          verifyQuerySignatures: true,
+          callOptions: {
+            reactNative: {
+              textStreaming: true,
+            },
+          },
         }
       });
       setBackendActor(actor);

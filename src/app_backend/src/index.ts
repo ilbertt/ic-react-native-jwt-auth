@@ -1,7 +1,6 @@
 import express from 'express';
 import { auth } from 'express-oauth2-jwt-bearer';
 import { Principal } from '@dfinity/principal';
-import { Ed25519PublicKey } from '@dfinity/identity';
 
 type ApiResponse = {
   principal: string;
@@ -9,13 +8,12 @@ type ApiResponse = {
 }
 
 const principalFromNonce = (nonce: string) => {
-  const publicKey = Ed25519PublicKey.fromDer(Buffer.from(nonce, 'hex').buffer as ArrayBuffer);
-  return Principal.selfAuthenticating(new Uint8Array(publicKey.toDer()));
+  return Principal.selfAuthenticating(new Uint8Array(Buffer.from(nonce, 'hex').buffer));
 }
 
 const checkJwt = auth({
-  audience: process.env.APP_BACKEND_AUDIENCE,
-  issuerBaseURL: process.env.APP_BACKEND_ISSUER_BASE_URL,
+  audience: process.env.ID_TOKEN_AUDIENCE,
+  issuerBaseURL: process.env.ID_TOKEN_ISSUER_BASE_URL,
   tokenSigningAlg: 'RS256',
   validators: {
     nonce: (_roles, claims, _header) => {

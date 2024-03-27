@@ -45,18 +45,27 @@ cp .env.example .env
 ```
 and replace the values with your own.
 
+Start the IC backend:
+
+```bash
+# in a separate terminal
+bun start:dfx
+# in the main terminal
+bun deploy:ic_backend
+```
+
 Start the off-chain backend:
 
 ```bash
-bun --cwd src/app_backend start
+bun start:app_backend
 ```
 
 Start the mobile app, run:
 
 ```bash
 # Android
-bun --cwd src/app android
+bun start:android
 # iOS
-bun --cwd src/app ios
+bun start:ios
 ```
 See the `expo start` CLI [docs](https://docs.expo.dev/more/expo-cli/#develop) for more information.

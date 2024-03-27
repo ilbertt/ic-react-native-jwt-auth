@@ -1,6 +1,4 @@
-import Constants from 'expo-constants';
-
-const hostUri = Constants.expoConfig?.hostUri;
+import { HOST_IP } from "./common";
 
 export type ApiResponse = {
   status: number;
@@ -11,7 +9,7 @@ export type ApiResponse = {
 };
 
 export const fetchApi = async (jwt?: string): Promise<ApiResponse> => {
-  const response = await fetch(`http://${hostUri?.split(':')[0]}:3000/authenticated`, {
+  const response = await fetch(`http://${HOST_IP}:3000/authenticated`, {
     headers: jwt ? {
       Authorization: `Bearer ${jwt}`,
     } : {},

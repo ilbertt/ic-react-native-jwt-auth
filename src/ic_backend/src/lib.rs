@@ -1,72 +1,37 @@
+mod id_token;
+mod utils;
+
 use candid::Principal;
 use ic_cdk::*;
-use jsonwebtoken_rustcrypto::{decode, decode_header, Algorithm, DecodingKey, Validation};
-use serde::{Deserialize, Serialize};
+use jsonwebtoken_rustcrypto::Algorithm;
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-struct Auth0JWK {
-    kty: String,
-    r#use: String,
-    n: String,
-    e: String,
-    kid: String,
-    x5t: String,
-    x5c: Vec<String>,
-    alg: String,
-}
-
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-struct Auth0JWKSet {
-    keys: Vec<Auth0JWK>,
-}
-
-impl Auth0JWKSet {
-    fn find_key(&self, kid: &str) -> Option<&Auth0JWK> {
-        self.keys.iter().find(|it| it.kid == kid)
-    }
-}
-
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-struct JWTClaims {
-    nickname: String,
-    name: String,
-    picture: String,
-    updated_at: String,
-    email: String,
-    email_verified: bool,
-    iss: String,
-    aud: String,
-    iat: u64,
-    exp: u64,
-    sub: String,
-    sid: String,
-    nonce: String,
-}
+use crate::id_token::{decode, validate};
 
 const AUTH0_JWKS: &[u8] = include_bytes!("jwks.json");
+// ignore rust-analyzer errors on these environment variables
+// compilation succeeds if you've correctly set the .env file
+const AUTH0_ISSUER: &str = env!("ID_TOKEN_ISSUER_BASE_URL");
+const AUTH0_AUDIENCE: &str = env!("ID_TOKEN_AUDIENCE");
 
 #[update]
 fn login(jwt: String) -> String {
     let session_principal = caller();
 
-    let jwks: Auth0JWKSet = serde_json::from_slice(AUTH0_JWKS).unwrap();
-
-    let header = decode_header(&jwt).unwrap();
-    let key_id = header.kid.unwrap();
-    let jwk = jwks.find_key(&key_id).unwrap();
-
-    let token = decode::<JWTClaims>(
+    let token = decode(
         &jwt,
-        &DecodingKey::from_rsa_components(&jwk.n, &jwk.e).unwrap(),
-        &Validation::new(Algorithm::RS256),
+        std::str::from_utf8(AUTH0_JWKS).unwrap(),
+        Algorithm::RS256,
     )
     .unwrap();
 
+    validate(&token.claims, AUTH0_ISSUER, AUTH0_AUDIENCE).unwrap();
+
     let nonce = hex::decode(&token.claims.nonce).unwrap();
+    let jwt_principal = Principal::self_authenticating(nonce.as_slice());
 
-    assert_eq!(session_principal, Principal::from_slice(&nonce));
+    assert_eq!(session_principal, jwt_principal);
 
-    format!("Hello, {}!", token.claims.sub)
+    token.claims.sub
 }
 
 // In the following, we register a custom getrandom implementation because

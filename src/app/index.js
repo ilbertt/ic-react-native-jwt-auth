@@ -1,6 +1,11 @@
 // polyfills
-import 'fast-text-encoding';
-import 'react-native-get-random-values';
+import { polyfill as polyfillEncoding } from 'react-native-polyfill-globals/src/encoding';
+import { polyfill as polyfillCrypto } from 'react-native-polyfill-globals/src/crypto';
+polyfillEncoding();
+polyfillCrypto();
+globalThis.TextEncoder = TextEncoder;
+window.TextEncoder = TextEncoder;
+import { TextEncoder } from "text-encoding";
 
 import { registerRootComponent } from 'expo';
 

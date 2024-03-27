@@ -1,6 +1,13 @@
 {
   "name": "ic-react-native-jwt-auth",
   "private": true,
+  "scripts": {
+    "start:dfx": "dfx start --clean --host 0.0.0.0:4943",
+    "start:app_backend": "bun --cwd src/app_backend start",
+    "deploy:ic_backend": "dfx deploy ic_backend",
+    "start:android": "bun --cwd src/app android",
+    "start:ios": "bun --cwd src/app ios"
+  },
   "workspaces": [
     "src/*"
   ],
