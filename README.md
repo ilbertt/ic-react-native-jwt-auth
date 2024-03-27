@@ -48,21 +48,23 @@ and replace the values with your own.
 Start the IC backend:
 
 ```bash
-# in a separate terminal
+# in terminal 1
 bun start:dfx
-# in the main terminal
+# in terminal 2
 bun deploy:ic_backend
 ```
 
 Start the off-chain backend:
 
 ```bash
+# in terminal 3
 bun start:app_backend
 ```
 
-Start the mobile app, run:
+Start the mobile app:
 
 ```bash
+# in terminal 4
 # Android
 bun start:android
 # iOS
