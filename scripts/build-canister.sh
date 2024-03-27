@@ -2,10 +2,12 @@
 
 set -e
 
+# load environment variables
+source .env
+
 # download Auth0 JWKS
 mkdir -p data
-source .env
-curl -s -o data/jwks.json https://$EXPO_PUBLIC_AUTH0_TENANT_DOMAIN/.well-known/jwks.json
+curl -s -o data/jwks.json $ID_TOKEN_ISSUER_BASE_URL.well-known/jwks.json
 
 # generate types
 dfx generate ic_backend
