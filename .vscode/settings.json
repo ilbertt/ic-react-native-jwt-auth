@@ -1,0 +1,7 @@
+{
+  "rust-analyzer.cargo.extraEnv": {
+    // just to avoid rust-analyzer env variables errors
+    "ID_TOKEN_ISSUER_BASE_URL": "https://dummy-issuer-url/",
+    "ID_TOKEN_AUDIENCE": "dummy-audience",
+  }
+}
