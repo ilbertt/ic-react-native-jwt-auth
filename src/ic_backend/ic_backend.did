@@ -1,3 +1,37 @@
+type UserSub = text;
+type PublicKey = blob;
+type UserKey = PublicKey;
+type Timestamp = nat64;
+type Signature = blob;
+
+type PrepareDelegationResponse = record {
+    user_key : UserKey;
+    expiration : Timestamp;
+};
+
+type Delegation = record {
+    pubkey : PublicKey;
+    expiration : Timestamp;
+    targets : opt vec principal;
+};
+
+type SignedDelegation = record {
+    delegation : Delegation;
+    signature : Signature;
+};
+
+type GetDelegationResponse = variant {
+    signed_delegation : SignedDelegation;
+    no_such_delegation;
+};
+
+type AuthenticatedResponse = record {
+    user_sub : UserSub;
+    user_principal : principal;
+};
+
 service : {
-    "login" : (text) -> (text);
+    "prepare_delegation" : (text) -> (PrepareDelegationResponse);
+    "get_delegation" : (text, Timestamp) -> (GetDelegationResponse) query;
+    "authenticated" : () -> (AuthenticatedResponse) query;
 };

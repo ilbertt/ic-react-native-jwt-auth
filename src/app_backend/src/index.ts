@@ -3,8 +3,8 @@ import { auth } from 'express-oauth2-jwt-bearer';
 import { Principal } from '@dfinity/principal';
 
 type ApiResponse = {
-  principal: string;
-  user_id: string;
+  session_principal: string;
+  user_sub: string;
 }
 
 const principalFromNonce = (nonce: string) => {
@@ -48,8 +48,8 @@ app.get('/authenticated', checkJwt, function (req, res) {
   const principal = principalFromNonce(auth.payload.nonce as string);
 
   const response = {
-    principal: principal.toText(),
-    user_id: auth.payload.sub!,
+    session_principal: principal.toText(),
+    user_sub: auth.payload.sub!,
   } satisfies ApiResponse;
 
   console.log('Authenticated request received!', response);

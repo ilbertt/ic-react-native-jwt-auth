@@ -5,7 +5,8 @@ polyfillEncoding();
 polyfillCrypto();
 globalThis.TextEncoder = TextEncoder;
 window.TextEncoder = TextEncoder;
-import { TextEncoder } from "text-encoding";
+import { TextEncoder } from 'text-encoding';
+import 'react-native-get-random-values';
 
 import { registerRootComponent } from 'expo';
 

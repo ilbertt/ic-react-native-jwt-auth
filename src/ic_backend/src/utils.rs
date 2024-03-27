@@ -1,5 +1,7 @@
 use base64::Engine;
+use candid::Principal;
 use ic_cdk::api::time;
+use ic_stable_structures::storable::Blob;
 use jsonwebtoken_rustcrypto::errors::ErrorKind;
 
 use crate::id_token::IdTokenResult;
@@ -16,4 +18,8 @@ pub fn base64_decode(input: &str) -> IdTokenResult<Vec<u8>> {
             .with_decode_padding_mode(base64::engine::DecodePaddingMode::RequireNone),
     );
     Ok(engine.decode(input).map_err(|e| ErrorKind::Base64(e))?)
+}
+
+pub fn principal_to_blob(principal: Principal) -> Blob<29> {
+    principal.as_slice()[..29].try_into().unwrap()
 }

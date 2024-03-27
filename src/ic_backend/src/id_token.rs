@@ -9,10 +9,17 @@ use crate::utils::{base64_decode, unix_timestamp};
 /// This value is arbitrary and should be reasonably small.
 const MAX_IAT_AGE_SECONDS: u64 = 10 * 60; // 10 minutes
 
+const AUTH0_JWKS: &[u8] = include_bytes!("jwks.json");
+// ignore rust-analyzer errors on these environment variables
+// compilation succeeds if you've correctly set the .env file
+const AUTH0_ISSUER: &str = env!("ID_TOKEN_ISSUER_BASE_URL");
+const AUTH0_AUDIENCE: &str = env!("ID_TOKEN_AUDIENCE");
+
+pub type IdToken = TokenData<JWTClaims>;
 pub type IdTokenResult<T> = std::result::Result<T, ErrorKind>;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub struct Auth0JWK {
+struct Auth0JWK {
     pub kty: String,
     pub r#use: String,
     pub n: String,
@@ -24,8 +31,8 @@ pub struct Auth0JWK {
 }
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub struct Auth0JWKSet {
-    pub keys: Vec<Auth0JWK>,
+struct Auth0JWKSet {
+    keys: Vec<Auth0JWK>,
 }
 
 impl Auth0JWKSet {
@@ -57,15 +64,12 @@ macro_rules! expect_two {
     }};
 }
 
-pub fn decode(
-    token: &str,
-    jwks: &str,
-    expected_alg: Algorithm,
-) -> IdTokenResult<TokenData<JWTClaims>> {
+pub fn decode(token: &str, expected_alg: Algorithm) -> IdTokenResult<IdToken> {
     let (signature, message) = expect_two!(token.rsplitn(2, '.'));
     let (claims, _) = expect_two!(message.rsplitn(2, '.'));
 
-    let jwks: Auth0JWKSet = serde_json::from_str(jwks).map_err(|e| ErrorKind::Json(e))?;
+    let jwks_str = std::str::from_utf8(AUTH0_JWKS).map_err(|_| ErrorKind::NoWorkingKey)?;
+    let jwks: Auth0JWKSet = serde_json::from_str(jwks_str).map_err(|e| ErrorKind::Json(e))?;
 
     let header = decode_header(token).map_err(|e| e.into_kind())?;
     let key_id = header.kid.as_ref().unwrap();
@@ -85,7 +89,7 @@ pub fn decode(
     let claims: JWTClaims =
         serde_json::from_str(&decoded_claims).map_err(|e| ErrorKind::Json(e))?;
 
-    Ok(TokenData { header, claims })
+    Ok(IdToken { header, claims })
 }
 
 #[derive(Debug)]
@@ -96,7 +100,7 @@ pub enum ValidationError {
     AudienceMismatch,
 }
 
-pub fn validate(claims: &JWTClaims, issuer: &str, audience: &str) -> Result<(), ValidationError> {
+pub fn validate(claims: &JWTClaims) -> Result<(), ValidationError> {
     let time = unix_timestamp();
 
     if claims.exp < time {
@@ -107,13 +111,17 @@ pub fn validate(claims: &JWTClaims, issuer: &str, audience: &str) -> Result<(), 
         return Err(ValidationError::IatTooOld);
     }
 
-    if claims.iss != issuer {
+    if claims.iss != AUTH0_ISSUER {
         return Err(ValidationError::IssuerMismatch);
     }
 
-    if claims.aud != audience {
+    if claims.aud != AUTH0_AUDIENCE {
         return Err(ValidationError::AudienceMismatch);
     }
 
     Ok(())
+}
+
+pub fn expiration_timestamp_ns(claims: &JWTClaims) -> u64 {
+    claims.exp * 1_000_000_000
 }

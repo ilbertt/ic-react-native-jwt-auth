@@ -3,8 +3,8 @@ import { HOST_IP } from "./common";
 export type ApiResponse = {
   status: number;
   data?: {
-    principal: string;
-    user_id: string;
+    session_principal: string;
+    user_sub: string;
   };
 };
 
