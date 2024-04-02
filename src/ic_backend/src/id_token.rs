@@ -9,6 +9,7 @@ use crate::utils::{base64_decode, unix_timestamp};
 /// This value is arbitrary and should be reasonably small.
 const MAX_IAT_AGE_SECONDS: u64 = 10 * 60; // 10 minutes
 
+// TODO: fetch the JWKS from Auth0 using HTTPS outcalls
 const AUTH0_JWKS: &[u8] = include_bytes!("jwks.json");
 // ignore rust-analyzer errors on these environment variables
 // compilation succeeds if you've correctly set the .env file
@@ -52,6 +53,42 @@ pub struct JWTClaims {
     pub nonce: String,
 }
 
+impl JWTClaims {
+    pub fn expiration_timestamp_ns(&self) -> u64 {
+        self.exp * 1_000_000_000
+    }
+
+    pub fn validate(&self) -> Result<(), ValidationError> {
+        let time = unix_timestamp();
+
+        if self.exp < time {
+            return Err(ValidationError::TokenExpired);
+        }
+
+        if self.iat + MAX_IAT_AGE_SECONDS < time {
+            return Err(ValidationError::IatTooOld);
+        }
+
+        if self.iss != AUTH0_ISSUER {
+            return Err(ValidationError::IssuerMismatch);
+        }
+
+        if self.aud != AUTH0_AUDIENCE {
+            return Err(ValidationError::AudienceMismatch);
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub enum ValidationError {
+    TokenExpired,
+    IatTooOld,
+    IssuerMismatch,
+    AudienceMismatch,
+}
+
 /// Takes the result of a rsplit and ensure we only get 2 parts
 /// Errors if we don't
 macro_rules! expect_two {
@@ -90,38 +127,4 @@ pub fn decode(token: &str, expected_alg: Algorithm) -> IdTokenResult<IdToken> {
         serde_json::from_str(&decoded_claims).map_err(|e| ErrorKind::Json(e))?;
 
     Ok(IdToken { header, claims })
-}
-
-#[derive(Debug)]
-pub enum ValidationError {
-    TokenExpired,
-    IatTooOld,
-    IssuerMismatch,
-    AudienceMismatch,
-}
-
-pub fn validate(claims: &JWTClaims) -> Result<(), ValidationError> {
-    let time = unix_timestamp();
-
-    if claims.exp < time {
-        return Err(ValidationError::TokenExpired);
-    }
-
-    if claims.iat + MAX_IAT_AGE_SECONDS < time {
-        return Err(ValidationError::IatTooOld);
-    }
-
-    if claims.iss != AUTH0_ISSUER {
-        return Err(ValidationError::IssuerMismatch);
-    }
-
-    if claims.aud != AUTH0_AUDIENCE {
-        return Err(ValidationError::AudienceMismatch);
-    }
-
-    Ok(())
-}
-
-pub fn expiration_timestamp_ns(claims: &JWTClaims) -> u64 {
-    claims.exp * 1_000_000_000
 }

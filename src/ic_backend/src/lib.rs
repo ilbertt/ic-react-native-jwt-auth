@@ -59,7 +59,7 @@ fn post_upgrade() {
 fn check_authorization(caller: Principal, jwt: String) -> Result<(IdToken, SessionKey), String> {
     let token = id_token::decode(&jwt, Algorithm::RS256).map_err(|e| format!("{:?}", e))?;
 
-    id_token::validate(&token.claims).map_err(|e| format!("{:?}", e))?;
+    token.claims.validate().map_err(|e| format!("{:?}", e))?;
 
     let nonce = {
         let nonce = hex::decode(&token.claims.nonce).map_err(|e| format!("{:?}", e))?;
@@ -85,7 +85,7 @@ async fn prepare_delegation(jwt: String) -> PrepareDelegationResponse {
     };
 
     let sub = token.claims.clone().sub;
-    let expiration = id_token::expiration_timestamp_ns(&token.claims);
+    let expiration = token.claims.expiration_timestamp_ns();
     let user_key = delegation::prepare_delegation(&sub, session_key, expiration).await;
 
     let principal = delegation::get_principal(&sub);
