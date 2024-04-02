@@ -77,11 +77,17 @@ Start the mobile app:
 
 ```bash
 # in terminal 4
-# Android
+cd src/app
+cp ../../.env .env
+bun expo prebuild
+cd ../..
+# if you want to start the app for Android
 bun start:android
-# iOS
+# if you want to start the app for iOS
 bun start:ios
 ```
+> You may need to manually start the Android/iOS emulator.
+
 See the `expo start` CLI [docs](https://docs.expo.dev/more/expo-cli/#develop) for more information.
 
 ## How it works

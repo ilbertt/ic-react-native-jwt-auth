@@ -12,7 +12,7 @@ use ic_cdk_timers::set_timer;
 use ic_stable_structures::{
     memory_manager::{MemoryId, MemoryManager, VirtualMemory},
     storable::Blob,
-    DefaultMemoryImpl, StableBTreeMap,
+    DefaultMemoryImpl, StableBTreeMap, StableCell,
 };
 use id_token::IdToken;
 use jsonwebtoken_rustcrypto::Algorithm;
@@ -20,12 +20,14 @@ use serde_bytes::ByteBuf;
 use std::{cell::RefCell, time::Duration};
 
 use crate::{
-    state::State,
+    state::{Salt, State, EMPTY_SALT},
     types::{
         AuthenticatedResponse, GetDelegationResponse, PrepareDelegationResponse, SessionKey,
         Timestamp, UserSub,
     },
 };
+
+type Memory = VirtualMemory<DefaultMemoryImpl>;
 
 thread_local! {
     static MEMORY_MANAGER: RefCell<MemoryManager<DefaultMemoryImpl>> =
@@ -35,9 +37,13 @@ thread_local! {
 thread_local! {
     /* flexible */ static STATE: RefCell<State> = RefCell::new(State::default());
 
-    /* stable */static PRINCIPAL_USER_SUB: RefCell<StableBTreeMap<Blob<29>, UserSub, VirtualMemory<DefaultMemoryImpl>>> = RefCell::new(
+    /* stable */ static SALT: RefCell<StableCell<Salt, Memory>> = RefCell::new(
+        StableCell::init(MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0))), EMPTY_SALT).unwrap()
+    );
+
+    /* stable */ static PRINCIPAL_USER_SUB: RefCell<StableBTreeMap<Blob<29>, UserSub, Memory>> = RefCell::new(
         StableBTreeMap::init(
-            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0))),
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(1))),
         )
     );
 }
