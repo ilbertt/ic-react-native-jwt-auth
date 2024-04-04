@@ -34,4 +34,5 @@ service : {
     "prepare_delegation" : (text) -> (PrepareDelegationResponse);
     "get_delegation" : (text, Timestamp) -> (GetDelegationResponse) query;
     "authenticated" : () -> (AuthenticatedResponse) query;
+    "sync_jwks" : () -> ();
 };

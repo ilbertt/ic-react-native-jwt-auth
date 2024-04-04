@@ -3,44 +3,22 @@ use jsonwebtoken_rustcrypto::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::utils::{base64_decode, unix_timestamp};
+use crate::{
+    state,
+    utils::{base64_decode, unix_timestamp},
+};
 
 /// The maximum age of an ID token (checked against the `iat` claim).
 /// This value is arbitrary and should be reasonably small.
 const MAX_IAT_AGE_SECONDS: u64 = 10 * 60; // 10 minutes
 
-// TODO: fetch the JWKS from Auth0 using HTTPS outcalls
-const AUTH0_JWKS: &[u8] = include_bytes!("jwks.json");
 // ignore rust-analyzer errors on these environment variables
 // compilation succeeds if you've correctly set the .env file
-const AUTH0_ISSUER: &str = env!("ID_TOKEN_ISSUER_BASE_URL");
+pub const AUTH0_ISSUER: &str = env!("ID_TOKEN_ISSUER_BASE_URL"); // expected to have a trailing slash
 const AUTH0_AUDIENCE: &str = env!("ID_TOKEN_AUDIENCE");
 
 pub type IdToken = TokenData<JWTClaims>;
 pub type IdTokenResult<T> = std::result::Result<T, ErrorKind>;
-
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-struct Auth0JWK {
-    pub kty: String,
-    pub r#use: String,
-    pub n: String,
-    pub e: String,
-    pub kid: String,
-    pub x5t: String,
-    pub x5c: Vec<String>,
-    pub alg: String,
-}
-
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-struct Auth0JWKSet {
-    keys: Vec<Auth0JWK>,
-}
-
-impl Auth0JWKSet {
-    fn find_key(&self, kid: &str) -> Option<&Auth0JWK> {
-        self.keys.iter().find(|it| it.kid == kid)
-    }
-}
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct JWTClaims {
@@ -105,8 +83,7 @@ pub fn decode(token: &str, expected_alg: Algorithm) -> IdTokenResult<IdToken> {
     let (signature, message) = expect_two!(token.rsplitn(2, '.'));
     let (claims, _) = expect_two!(message.rsplitn(2, '.'));
 
-    let jwks_str = std::str::from_utf8(AUTH0_JWKS).map_err(|_| ErrorKind::NoWorkingKey)?;
-    let jwks: Auth0JWKSet = serde_json::from_str(jwks_str).map_err(|e| ErrorKind::Json(e))?;
+    let jwks = state::jwks(|s| s.clone().ok_or(ErrorKind::NoWorkingKey))?;
 
     let header = decode_header(token).map_err(|e| e.into_kind())?;
     let key_id = header.kid.as_ref().unwrap();

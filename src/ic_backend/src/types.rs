@@ -1,4 +1,5 @@
-use candid::{CandidType, Deserialize, Principal};
+use candid::{CandidType, Principal};
+use serde::{Deserialize, Serialize};
 use serde_bytes::ByteBuf;
 
 pub type UserSub = String;
@@ -39,4 +40,27 @@ pub enum GetDelegationResponse {
 pub struct AuthenticatedResponse {
     pub user_sub: UserSub,
     pub user_principal: Principal,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct Auth0JWK {
+    pub kty: String,
+    pub r#use: String,
+    pub n: String,
+    pub e: String,
+    pub kid: String,
+    pub x5t: String,
+    pub x5c: Vec<String>,
+    pub alg: String,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct Auth0JWKSet {
+    pub keys: Vec<Auth0JWK>,
+}
+
+impl Auth0JWKSet {
+    pub fn find_key(&self, kid: &str) -> Option<&Auth0JWK> {
+        self.keys.iter().find(|it| it.kid == kid)
+    }
 }

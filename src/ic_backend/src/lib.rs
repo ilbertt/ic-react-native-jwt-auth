@@ -7,7 +7,7 @@ mod users;
 mod utils;
 
 use candid::Principal;
-use ic_cdk::*;
+use ic_cdk::{api::is_controller, *};
 use ic_cdk_timers::set_timer;
 use ic_stable_structures::{
     memory_manager::{MemoryId, MemoryManager, VirtualMemory},
@@ -133,6 +133,17 @@ fn authenticated() -> AuthenticatedResponse {
         }
         None => trap("No user found"),
     }
+}
+
+#[update]
+async fn sync_jwks() {
+    let caller = caller();
+
+    if !is_controller(&caller) {
+        trap("caller is not a controller");
+    }
+
+    state::fetch_and_store_jwks().await.unwrap();
 }
 
 // In the following, we register a custom getrandom implementation because
