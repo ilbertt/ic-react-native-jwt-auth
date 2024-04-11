@@ -90,6 +90,14 @@ bun start:ios
 
 See the `expo start` CLI [docs](https://docs.expo.dev/more/expo-cli/#develop) for more information.
 
+## Testing
+
+Integration tests are available for the IC Rust backend canister. Simply run:
+
+```bash
+./scripts/integration-test.sh
+```
+
 ## How it works
 
 This PoC is highly inspired by [this discussion](https://forum.dfinity.org/t/25334/7) on the Internet Computer forum.
@@ -182,7 +190,9 @@ The [canister_sig_util](https://github.com/dfinity/internet-identity/tree/releas
     Fetching the JWKS at runtime is needed because [JWK](https://datatracker.ietf.org/doc/html/rfc7517)s on Auth0 may rotate.
 
     Related issue: https://github.com/ilbertt/ic-react-native-jwt-auth/issues/1.
-- [ ] tests
+- [x] tests (integration)
+
+    Related PR: https://github.com/ilbertt/ic-react-native-jwt-auth/pull/2.
 
 ## License
 
