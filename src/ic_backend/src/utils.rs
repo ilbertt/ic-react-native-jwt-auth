@@ -13,11 +13,6 @@ pub fn unix_timestamp() -> u64 {
 
 pub fn base64_decode(input: &str) -> IdTokenResult<Vec<u8>> {
     let engine = general_purpose::URL_SAFE_NO_PAD;
-    // let engine = base64::engine::GeneralPurpose::new(
-    //     &base64::alphabet::URL_SAFE,
-    //     base64::engine::GeneralPurposeConfig::new()
-    //         .with_decode_padding_mode(base64::engine::DecodePaddingMode::RequireNone),
-    // );
     engine.decode(input).map_err(|e| ErrorKind::Base64(e))
 }
 

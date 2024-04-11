@@ -47,7 +47,7 @@ pub fn create_jwt(
     sub: &str,
     nonce: &str,
     valid_for: Duration,
-) -> (JWTClaims<NoCustomClaims>, String) {
+) -> (String, JWTClaims<NoCustomClaims>) {
     let claims = Claims::create(valid_for)
         .with_issuer(AUTH0_ISSUER)
         .with_audience(AUTH0_AUDIENCE)
@@ -55,5 +55,5 @@ pub fn create_jwt(
         .with_nonce(nonce);
     let jwt = key_pair.sign(claims.clone()).unwrap();
 
-    (claims, jwt)
+    (jwt, claims)
 }

@@ -36,6 +36,7 @@ pub fn prepare_delegation(
 pub fn get_delegation(
     env: &TestEnv,
     sender: Principal,
+    jwt: String,
     expiration: u64,
 ) -> Result<GetDelegationResponse, CallError> {
     query_candid_as(
@@ -43,7 +44,7 @@ pub fn get_delegation(
         env.canister_id(),
         sender,
         "get_delegation",
-        (expiration,),
+        (jwt, expiration),
     )
     .map(|(res,)| res)
 }

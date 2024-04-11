@@ -9,26 +9,26 @@ pub type UserKey = PublicKey;
 pub type Timestamp = u64; // in nanos since epoch
 pub type Signature = ByteBuf;
 
-#[derive(Clone, Debug, CandidType, Deserialize)]
+#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq)]
 pub struct Delegation {
     pub pubkey: PublicKey,
     pub expiration: Timestamp,
     pub targets: Option<Vec<Principal>>,
 }
 
-#[derive(Clone, Debug, CandidType, Deserialize)]
+#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq)]
 pub struct SignedDelegation {
     pub delegation: Delegation,
     pub signature: Signature,
 }
 
-#[derive(Clone, Debug, CandidType, Deserialize)]
+#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq)]
 pub struct PrepareDelegationResponse {
     pub user_key: UserKey,
     pub expiration: Timestamp,
 }
 
-#[derive(Clone, Debug, CandidType, Deserialize)]
+#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq)]
 pub enum GetDelegationResponse {
     #[serde(rename = "signed_delegation")]
     SignedDelegation(SignedDelegation),
@@ -36,7 +36,7 @@ pub enum GetDelegationResponse {
     NoSuchDelegation,
 }
 
-#[derive(Clone, Debug, CandidType, Deserialize)]
+#[derive(Clone, Debug, CandidType, Deserialize, PartialEq, Eq)]
 pub struct AuthenticatedResponse {
     pub user_sub: UserSub,
     pub user_principal: Principal,
