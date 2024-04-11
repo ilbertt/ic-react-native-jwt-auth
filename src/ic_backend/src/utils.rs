@@ -6,9 +6,11 @@ use jsonwebtoken_rustcrypto::errors::ErrorKind;
 
 use crate::id_token::IdTokenResult;
 
+pub const NANOS_IN_SECONDS: u64 = 1_000_000_000;
+
 /// Returns the current unix timestamp in seconds
 pub fn unix_timestamp() -> u64 {
-    time() / 1_000_000_000
+    time() / NANOS_IN_SECONDS
 }
 
 pub fn base64_decode(input: &str) -> IdTokenResult<Vec<u8>> {
