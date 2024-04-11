@@ -25,5 +25,10 @@ jobs:
           cache-on-failure: "true"
           shared-key: "build-wasm"
 
+      - name: Install dfx
+        uses: dfinity/setup-dfx@main
+        with:
+          dfx-version: "latest"
+
       - name: Run integration tests
         run: ./scripts/integration-test.sh
