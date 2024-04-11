@@ -29,3 +29,14 @@ fn test_set_jwks_controller_only() {
 
     assert!(extract_trap_message(res).contains("caller is not a controller"));
 }
+
+#[test]
+fn test_set_jwks_once() {
+    let env = test_env::create_test_env();
+
+    set_jwks(&env, env.controller(), Auth0JWKSet { keys: vec![] }).unwrap();
+
+    let res = set_jwks(&env, env.controller(), Auth0JWKSet { keys: vec![] }).unwrap_err();
+    assert!(extract_trap_message(res)
+        .contains("JWKS already set. Call sync_jwks to fetch the JWKS from the auth provider"));
+}

@@ -154,6 +154,12 @@ fn set_jwks(jwks: Auth0JWKSet) {
         trap("caller is not a controller");
     }
 
+    // add an extra layer of security:
+    // we can only set the jwks once
+    if state::jwks(|jwks| jwks.clone()).is_some() {
+        trap("JWKS already set. Call sync_jwks to fetch the JWKS from the auth provider");
+    }
+
     state::store_jwks(jwks)
 }
 
