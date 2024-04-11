@@ -14,7 +14,7 @@ ic-cdk = "0.13"
 ic-cdk-timers = "0.7"
 ic-stable-structures = "0.6"
 ic-certified-map = "0.4"
-canister_sig_util = { git = "https://github.com/dfinity/internet-identity", tag = "release-2024-03-22" }
+canister_sig_util = { git = "https://github.com/dfinity/internet-identity", tag = "release-2024-04-05" }
 
 serde = "1.0"
 serde_json = "1.0"
