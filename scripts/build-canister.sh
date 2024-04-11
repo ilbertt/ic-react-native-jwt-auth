@@ -2,8 +2,7 @@
 
 set -e
 
-# load environment variables
-source .env
+LOAD_ENV_FILE=true
 
 # parse arguments
 while [[ $# -gt 0 ]]; do
@@ -18,8 +17,18 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       ;;
+    --ignore-env-file)
+      LOAD_ENV_FILE=false
+      shift # past argument
+      ;;
   esac
 done
+
+# load environment variables from .env
+if [[ "$LOAD_ENV_FILE" = true ]]; then
+  echo -e "\nLoading environment variables from .env file...\n"
+  source .env
+fi
 
 # generate types
 dfx generate ic_backend
