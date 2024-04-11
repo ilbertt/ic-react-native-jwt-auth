@@ -6,7 +6,7 @@ use common::{
     test_env,
 };
 use ic_agent::Identity;
-use ic_backend::types::Auth0JWKSet;
+use ic_backend_types::Auth0JWKSet;
 
 #[test]
 fn test_sync_jwks_controller_only() {

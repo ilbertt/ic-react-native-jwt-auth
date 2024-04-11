@@ -5,17 +5,15 @@ use canister_sig_util::{
     signature_map::{SignatureMap, LABEL_SIG},
     CanisterSigPublicKey,
 };
+use ic_backend_types::{
+    Delegation, GetDelegationResponse, PublicKey, SessionKey, SignedDelegation, Timestamp, UserKey,
+    UserSub,
+};
 use ic_cdk::{api::set_certified_data, id};
 use ic_certified_map::{labeled_hash, Hash};
 use serde_bytes::ByteBuf;
 
-use crate::{
-    hash, state,
-    types::{
-        Delegation, GetDelegationResponse, PublicKey, SessionKey, SignedDelegation, Timestamp,
-        UserKey, UserSub,
-    },
-};
+use crate::{hash, state};
 
 pub async fn prepare_delegation(
     user_sub: &UserSub,

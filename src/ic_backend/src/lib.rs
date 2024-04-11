@@ -2,11 +2,14 @@ mod delegation;
 mod hash;
 mod id_token;
 mod state;
-pub mod types;
 mod users;
 mod utils;
 
 use candid::Principal;
+use ic_backend_types::{
+    Auth0JWKSet, AuthenticatedResponse, GetDelegationResponse, PrepareDelegationResponse,
+    SessionKey, Timestamp, UserSub,
+};
 use ic_cdk::{api::is_controller, *};
 use ic_cdk_timers::set_timer;
 use ic_stable_structures::{
@@ -18,15 +21,8 @@ use id_token::IdToken;
 use jsonwebtoken_rustcrypto::Algorithm;
 use serde_bytes::ByteBuf;
 use std::{cell::RefCell, time::Duration};
-use types::Auth0JWKSet;
 
-use crate::{
-    state::{Salt, State, EMPTY_SALT},
-    types::{
-        AuthenticatedResponse, GetDelegationResponse, PrepareDelegationResponse, SessionKey,
-        Timestamp, UserSub,
-    },
-};
+use crate::state::{Salt, State, EMPTY_SALT};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 

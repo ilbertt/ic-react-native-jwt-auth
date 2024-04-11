@@ -4,7 +4,7 @@ use std::time::SystemTime;
 
 use candid::Principal;
 use ic_agent::Identity;
-use ic_backend::types::{
+use ic_backend_types::{
     Delegation, GetDelegationResponse, PrepareDelegationResponse, SignedDelegation,
 };
 use jwt_simple::prelude::*;

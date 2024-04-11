@@ -1,5 +1,5 @@
 use base64::{engine::general_purpose, Engine as _};
-use ic_backend::types::{Auth0JWK, Auth0JWKSet};
+use ic_backend_types::{Auth0JWK, Auth0JWKSet};
 use jwt_simple::prelude::*;
 
 // ignore rust-analyzer errors on these environment variables

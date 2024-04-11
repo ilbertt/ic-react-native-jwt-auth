@@ -1,5 +1,5 @@
 use candid::Principal;
-use ic_backend::types::{Auth0JWKSet, GetDelegationResponse, PrepareDelegationResponse};
+use ic_backend_types::{Auth0JWKSet, GetDelegationResponse, PrepareDelegationResponse};
 use pocket_ic::{query_candid_as, update_candid_as, CallError, ErrorCode, UserError};
 
 use super::test_env::TestEnv;
