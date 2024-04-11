@@ -2,7 +2,7 @@ mod delegation;
 mod hash;
 mod id_token;
 mod state;
-mod types;
+pub mod types;
 mod users;
 mod utils;
 
@@ -18,6 +18,7 @@ use id_token::IdToken;
 use jsonwebtoken_rustcrypto::Algorithm;
 use serde_bytes::ByteBuf;
 use std::{cell::RefCell, time::Duration};
+use types::Auth0JWKSet;
 
 use crate::{
     state::{Salt, State, EMPTY_SALT},
@@ -57,9 +58,7 @@ fn init() {
 
 #[post_upgrade]
 fn post_upgrade() {
-    set_timer(Duration::ZERO, || {
-        spawn(state::init());
-    });
+    init()
 }
 
 fn check_authorization(caller: Principal, jwt: String) -> Result<(IdToken, SessionKey), String> {
@@ -144,6 +143,18 @@ async fn sync_jwks() {
     }
 
     state::fetch_and_store_jwks().await.unwrap();
+}
+
+#[update]
+// used in tests
+fn set_jwks(jwks: Auth0JWKSet) {
+    let caller = caller();
+
+    if !is_controller(&caller) {
+        trap("caller is not a controller");
+    }
+
+    state::store_jwks(jwks)
 }
 
 // In the following, we register a custom getrandom implementation because

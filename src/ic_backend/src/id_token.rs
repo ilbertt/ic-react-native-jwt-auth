@@ -27,7 +27,6 @@ pub struct JWTClaims {
     pub iat: u64,
     pub exp: u64,
     pub sub: String,
-    pub sid: String,
     pub nonce: String,
 }
 

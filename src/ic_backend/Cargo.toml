@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "lib"]
 
 [dependencies]
 candid = "0.10"
@@ -28,3 +28,7 @@ sha2 = "0.10.8"
 
 [dev-dependencies]
 hex-literal = "0.2.1"
+pocket-ic = "2.2"
+jwt-simple = "0.12"
+ic-agent = "0.34"
+ring = "0.17"

@@ -42,7 +42,7 @@ pub struct AuthenticatedResponse {
     pub user_principal: Principal,
 }
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(CandidType, Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Auth0JWK {
     pub kty: String,
     pub r#use: String,
@@ -54,7 +54,7 @@ pub struct Auth0JWK {
     pub alg: String,
 }
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(CandidType, Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Auth0JWKSet {
     pub keys: Vec<Auth0JWK>,
 }

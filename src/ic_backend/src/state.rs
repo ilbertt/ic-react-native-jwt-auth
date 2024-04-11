@@ -90,7 +90,7 @@ pub async fn fetch_and_store_jwks() -> Result<(), String> {
 
     let jwks: Auth0JWKSet =
         serde_json::from_slice(&res.body).map_err(|e| format!("Error parsing JWKS: {:?}", e))?;
-    jwks_mut(|j| *j = Some(jwks.clone()));
+    store_jwks(jwks.clone());
 
     print(&format!(
         "Fetched JWKS. JSON Web Keys available: {}",
@@ -98,6 +98,10 @@ pub async fn fetch_and_store_jwks() -> Result<(), String> {
     ));
 
     Ok(())
+}
+
+pub fn store_jwks(jwks: Auth0JWKSet) {
+    jwks_mut(|j| *j = Some(jwks));
 }
 
 fn start_jwks_fetch_interval() {
