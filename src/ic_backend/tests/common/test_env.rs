@@ -12,6 +12,7 @@ use super::identity::generate_random_identity;
 pub struct TestEnv {
     pic: PocketIc,
     canister_id: Principal,
+    #[allow(dead_code)]
     root_ic_key: Vec<u8>,
     controller: Principal,
 }

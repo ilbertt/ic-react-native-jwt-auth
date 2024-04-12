@@ -1,4 +1,4 @@
-mod common;
+pub mod common;
 
 use candid::Principal;
 use ic_agent::Identity;

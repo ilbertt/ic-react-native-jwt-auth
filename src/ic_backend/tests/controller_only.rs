@@ -1,4 +1,4 @@
-mod common;
+pub mod common;
 
 use common::{
     canister::{extract_trap_message, get_jwks, set_jwks, sync_jwks},
