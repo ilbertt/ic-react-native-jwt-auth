@@ -13,7 +13,7 @@ candid.workspace = true
 ic-cdk = "0.13"
 ic-cdk-timers = "0.7"
 ic-stable-structures = "0.6"
-ic-certified-map = "0.4"
+ic-certification = "2.5"
 canister_sig_util = { git = "https://github.com/dfinity/internet-identity", tag = "release-2024-04-05" }
 
 serde.workspace = true
@@ -34,3 +34,4 @@ pocket-ic = "2.2"
 jwt-simple = "0.12"
 ic-agent = "0.34"
 ring = "0.17"
+ic-representation-independent-hash = "2.5"
