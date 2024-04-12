@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     state,
-    utils::{base64_decode, unix_timestamp},
+    utils::{base64_decode, unix_timestamp, NANOS_IN_SECONDS},
 };
 
 /// The maximum age of an ID token (checked against the `iat` claim).
@@ -24,16 +24,17 @@ pub type IdTokenResult<T> = std::result::Result<T, ErrorKind>;
 pub struct JWTClaims {
     pub iss: String,
     pub aud: String,
+    /// Issued at (seconds since unix epoch)
     pub iat: u64,
+    /// Expires at (seconds since unix epoch)
     pub exp: u64,
     pub sub: String,
-    pub sid: String,
     pub nonce: String,
 }
 
 impl JWTClaims {
     pub fn expiration_timestamp_ns(&self) -> u64 {
-        self.exp * 1_000_000_000
+        self.exp * NANOS_IN_SECONDS
     }
 
     pub fn validate(&self) -> Result<(), ValidationError> {

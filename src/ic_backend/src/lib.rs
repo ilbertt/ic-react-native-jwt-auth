@@ -2,11 +2,14 @@ mod delegation;
 mod hash;
 mod id_token;
 mod state;
-mod types;
 mod users;
 mod utils;
 
 use candid::Principal;
+use ic_backend_types::{
+    Auth0JWKSet, AuthenticatedResponse, GetDelegationResponse, PrepareDelegationResponse,
+    SessionKey, Timestamp, UserSub,
+};
 use ic_cdk::{api::is_controller, *};
 use ic_cdk_timers::set_timer;
 use ic_stable_structures::{
@@ -19,13 +22,7 @@ use jsonwebtoken_rustcrypto::Algorithm;
 use serde_bytes::ByteBuf;
 use std::{cell::RefCell, time::Duration};
 
-use crate::{
-    state::{Salt, State, EMPTY_SALT},
-    types::{
-        AuthenticatedResponse, GetDelegationResponse, PrepareDelegationResponse, SessionKey,
-        Timestamp, UserSub,
-    },
-};
+use crate::state::{Salt, State, EMPTY_SALT};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
@@ -57,9 +54,7 @@ fn init() {
 
 #[post_upgrade]
 fn post_upgrade() {
-    set_timer(Duration::ZERO, || {
-        spawn(state::init());
-    });
+    init()
 }
 
 fn check_authorization(caller: Principal, jwt: String) -> Result<(IdToken, SessionKey), String> {
@@ -144,6 +139,36 @@ async fn sync_jwks() {
     }
 
     state::fetch_and_store_jwks().await.unwrap();
+}
+
+#[update]
+// used in tests
+fn set_jwks(jwks: Auth0JWKSet) {
+    let caller = caller();
+
+    if !is_controller(&caller) {
+        trap("caller is not a controller");
+    }
+
+    // add an extra layer of security:
+    // we can only set the jwks once
+    if state::jwks(|jwks| jwks.clone()).is_some() {
+        trap("JWKS already set. Call sync_jwks to fetch the JWKS from the auth provider");
+    }
+
+    state::store_jwks(jwks)
+}
+
+#[query]
+// used in tests
+fn get_jwks() -> Option<Auth0JWKSet> {
+    let caller = caller();
+
+    if !is_controller(&caller) {
+        trap("caller is not a controller");
+    }
+
+    state::jwks(|jwks| jwks.clone())
 }
 
 // In the following, we register a custom getrandom implementation because

@@ -30,9 +30,26 @@ type AuthenticatedResponse = record {
     user_principal : principal;
 };
 
+type Auth0JWK = record {
+    kty : text;
+    use : text;
+    n : text;
+    e : text;
+    kid : text;
+    x5t : text;
+    x5c : vec text;
+    alg : text;
+};
+
+type Auth0JWKS = record {
+    keys : vec Auth0JWK;
+};
+
 service : {
     "prepare_delegation" : (text) -> (PrepareDelegationResponse);
     "get_delegation" : (text, Timestamp) -> (GetDelegationResponse) query;
     "authenticated" : () -> (AuthenticatedResponse) query;
     "sync_jwks" : () -> ();
+    "set_jwks" : (Auth0JWKS) -> ();
+    "get_jwks" : () -> (opt Auth0JWKS) query;
 };
