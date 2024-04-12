@@ -29,15 +29,17 @@ fn test_prepare_delegation() {
     let (auth_provider_key_pair, jwks) = initialize_auth_provider();
     initialize_canister(&env, jwks);
 
-    let identity = generate_random_identity();
+    let session_identity = generate_random_identity();
+    let session_principal = session_identity.sender().unwrap();
+    let session_public_key = session_identity.public_key().unwrap();
     let (jwt, claims) = create_jwt(
         &auth_provider_key_pair,
         "test_sub",
-        &pk_to_hex(&identity.public_key().unwrap()),
+        &pk_to_hex(&session_public_key),
         Duration::from_hours(JWT_VALID_FOR_HOURS),
     );
 
-    let res = prepare_delegation(&env, identity.sender().unwrap(), jwt).unwrap();
+    let res = prepare_delegation(&env, session_principal, jwt).unwrap();
 
     assert_eq!(
         res.expiration,
@@ -51,11 +53,12 @@ fn test_prepare_delegation_wrong_identity() {
     let (auth_provider_key_pair, jwks) = initialize_auth_provider();
     initialize_canister(&env, jwks);
 
-    let identity = generate_random_identity();
+    let session_identity = generate_random_identity();
+    let session_public_key = session_identity.public_key().unwrap();
     let (jwt, _) = create_jwt(
         &auth_provider_key_pair,
         "test_sub",
-        &pk_to_hex(&identity.public_key().unwrap()),
+        &pk_to_hex(&session_public_key),
         Duration::from_hours(JWT_VALID_FOR_HOURS),
     );
 
@@ -71,11 +74,12 @@ fn test_prepare_delegation_anonymous() {
     let (auth_provider_key_pair, jwks) = initialize_auth_provider();
     initialize_canister(&env, jwks);
 
-    let identity = generate_random_identity();
+    let session_identity = generate_random_identity();
+    let session_public_key = session_identity.public_key().unwrap();
     let (jwt, _) = create_jwt(
         &auth_provider_key_pair,
         "test_sub",
-        &pk_to_hex(&identity.public_key().unwrap()),
+        &pk_to_hex(&session_public_key),
         Duration::from_hours(JWT_VALID_FOR_HOURS),
     );
 
@@ -90,11 +94,13 @@ fn test_prepare_delegation_wrong_claims() {
     let (auth_provider_key_pair, jwks) = initialize_auth_provider();
     initialize_canister(&env, jwks);
 
-    let identity = generate_random_identity();
+    let session_identity = generate_random_identity();
+    let session_principal = session_identity.sender().unwrap();
+    let session_public_key = session_identity.public_key().unwrap();
     let (_, claims) = create_jwt(
         &auth_provider_key_pair,
         "test_sub",
-        &pk_to_hex(&identity.public_key().unwrap()),
+        &pk_to_hex(&session_public_key),
         Duration::from_hours(JWT_VALID_FOR_HOURS),
     );
 
@@ -103,7 +109,7 @@ fn test_prepare_delegation_wrong_claims() {
         let mut claims = claims.clone();
         claims.issuer = Some("wrong".to_string());
         let jwt = auth_provider_key_pair.sign(claims).unwrap();
-        let res = prepare_delegation(&env, identity.sender().unwrap(), jwt).unwrap_err();
+        let res = prepare_delegation(&env, session_principal, jwt).unwrap_err();
 
         assert!(extract_trap_message(res).contains("IssuerMismatch"));
     }
@@ -113,7 +119,7 @@ fn test_prepare_delegation_wrong_claims() {
         let mut claims = claims.clone();
         claims.audiences = Some(Audiences::AsString("wrong".to_string()));
         let jwt = auth_provider_key_pair.sign(claims).unwrap();
-        let res = prepare_delegation(&env, identity.sender().unwrap(), jwt).unwrap_err();
+        let res = prepare_delegation(&env, session_principal, jwt).unwrap_err();
 
         assert!(extract_trap_message(res).contains("AudienceMismatch"));
     }
@@ -130,7 +136,7 @@ fn test_prepare_delegation_wrong_claims() {
 
         claims.issued_at = Some(issued_at - Duration::from_secs(MAX_IAT_AGE_SECONDS + 1));
         let jwt = auth_provider_key_pair.sign(claims).unwrap();
-        let res = prepare_delegation(&env, identity.sender().unwrap(), jwt).unwrap_err();
+        let res = prepare_delegation(&env, session_principal, jwt).unwrap_err();
 
         assert!(extract_trap_message(res).contains("IatTooOld"));
     }
@@ -147,7 +153,7 @@ fn test_prepare_delegation_wrong_claims() {
 
         claims.expires_at = Some(expires_at - Duration::from_secs(1));
         let jwt = auth_provider_key_pair.sign(claims).unwrap();
-        let res = prepare_delegation(&env, identity.sender().unwrap(), jwt).unwrap_err();
+        let res = prepare_delegation(&env, session_principal, jwt).unwrap_err();
 
         assert!(extract_trap_message(res).contains("TokenExpired"));
     }
@@ -159,19 +165,20 @@ fn test_get_delegation() {
     let (auth_provider_key_pair, jwks) = initialize_auth_provider();
     initialize_canister(&env, jwks);
 
-    let identity = generate_random_identity();
-    let identity_public_key = identity.public_key().unwrap();
+    let session_identity = generate_random_identity();
+    let session_principal = session_identity.sender().unwrap();
+    let session_public_key = session_identity.public_key().unwrap();
     let (jwt, _) = create_jwt(
         &auth_provider_key_pair,
         "test_sub",
-        &pk_to_hex(&identity_public_key),
+        &pk_to_hex(&session_public_key),
         Duration::from_hours(JWT_VALID_FOR_HOURS),
     );
 
     let PrepareDelegationResponse { expiration, .. } =
-        prepare_delegation(&env, identity.sender().unwrap(), jwt.clone()).unwrap();
+        prepare_delegation(&env, session_principal, jwt.clone()).unwrap();
 
-    let res = get_delegation(&env, identity.sender().unwrap(), jwt, expiration).unwrap();
+    let res = get_delegation(&env, session_principal, jwt, expiration).unwrap();
 
     match res {
         GetDelegationResponse::SignedDelegation(SignedDelegation {
@@ -183,7 +190,7 @@ fn test_get_delegation() {
                 },
             ..
         }) => {
-            assert_eq!(pubkey, identity_public_key);
+            assert_eq!(pubkey, session_public_key);
             assert_eq!(expiration, expiration);
             assert!(targets.is_none());
         }
@@ -197,26 +204,27 @@ fn test_get_delegation_wrong_sub() {
     let (auth_provider_key_pair, jwks) = initialize_auth_provider();
     initialize_canister(&env, jwks);
 
-    let identity = generate_random_identity();
-    let identity_public_key = identity.public_key().unwrap();
+    let session_identity = generate_random_identity();
+    let session_principal = session_identity.sender().unwrap();
+    let session_public_key = session_identity.public_key().unwrap();
     let (jwt, _) = create_jwt(
         &auth_provider_key_pair,
         "test_sub",
-        &pk_to_hex(&identity_public_key),
+        &pk_to_hex(&session_public_key),
         Duration::from_hours(JWT_VALID_FOR_HOURS),
     );
 
     let PrepareDelegationResponse { expiration, .. } =
-        prepare_delegation(&env, identity.sender().unwrap(), jwt).unwrap();
+        prepare_delegation(&env, session_principal, jwt).unwrap();
 
     let (wrong_jwt, _) = create_jwt(
         &auth_provider_key_pair,
         "wrong_sub",
-        &pk_to_hex(&identity_public_key),
+        &pk_to_hex(&session_public_key),
         Duration::from_hours(JWT_VALID_FOR_HOURS),
     );
 
-    let res = get_delegation(&env, identity.sender().unwrap(), wrong_jwt, expiration).unwrap();
+    let res = get_delegation(&env, session_principal, wrong_jwt, expiration).unwrap();
 
     assert_eq!(res, GetDelegationResponse::NoSuchDelegation);
 }
@@ -227,18 +235,19 @@ fn test_get_delegation_wrong_expiration() {
     let (auth_provider_key_pair, jwks) = initialize_auth_provider();
     initialize_canister(&env, jwks);
 
-    let identity = generate_random_identity();
-    let identity_public_key = identity.public_key().unwrap();
+    let session_identity = generate_random_identity();
+    let session_principal = session_identity.sender().unwrap();
+    let session_public_key = session_identity.public_key().unwrap();
     let (jwt, _) = create_jwt(
         &auth_provider_key_pair,
         "test_sub",
-        &pk_to_hex(&identity_public_key),
+        &pk_to_hex(&session_public_key),
         Duration::from_hours(JWT_VALID_FOR_HOURS),
     );
 
-    prepare_delegation(&env, identity.sender().unwrap(), jwt.clone()).unwrap();
+    prepare_delegation(&env, session_principal, jwt.clone()).unwrap();
 
-    let res = get_delegation(&env, identity.sender().unwrap(), jwt, 0).unwrap();
+    let res = get_delegation(&env, session_principal, jwt, 0).unwrap();
 
     assert_eq!(res, GetDelegationResponse::NoSuchDelegation);
 }
@@ -249,11 +258,12 @@ fn test_get_delegation_wrong_identity() {
     let (auth_provider_key_pair, jwks) = initialize_auth_provider();
     initialize_canister(&env, jwks);
 
-    let identity = generate_random_identity();
+    let session_identity = generate_random_identity();
+    let session_public_key = session_identity.public_key().unwrap();
     let (jwt, _) = create_jwt(
         &auth_provider_key_pair,
         "test_sub",
-        &pk_to_hex(&identity.public_key().unwrap()),
+        &pk_to_hex(&session_public_key),
         Duration::from_hours(JWT_VALID_FOR_HOURS),
     );
 
@@ -269,11 +279,12 @@ fn test_get_delegation_anonymous() {
     let (auth_provider_key_pair, jwks) = initialize_auth_provider();
     initialize_canister(&env, jwks);
 
-    let identity = generate_random_identity();
+    let session_identity = generate_random_identity();
+    let session_public_key = session_identity.public_key().unwrap();
     let (jwt, _) = create_jwt(
         &auth_provider_key_pair,
         "test_sub",
-        &pk_to_hex(&identity.public_key().unwrap()),
+        &pk_to_hex(&session_public_key),
         Duration::from_hours(JWT_VALID_FOR_HOURS),
     );
 
@@ -288,11 +299,13 @@ fn test_get_delegation_wrong_claims() {
     let (auth_provider_key_pair, jwks) = initialize_auth_provider();
     initialize_canister(&env, jwks);
 
-    let identity = generate_random_identity();
+    let session_identity = generate_random_identity();
+    let session_principal = session_identity.sender().unwrap();
+    let session_public_key = session_identity.public_key().unwrap();
     let (_, claims) = create_jwt(
         &auth_provider_key_pair,
         "test_sub",
-        &pk_to_hex(&identity.public_key().unwrap()),
+        &pk_to_hex(&session_public_key),
         Duration::from_hours(JWT_VALID_FOR_HOURS),
     );
 
@@ -301,7 +314,7 @@ fn test_get_delegation_wrong_claims() {
         let mut claims = claims.clone();
         claims.issuer = Some("wrong".to_string());
         let jwt = auth_provider_key_pair.sign(claims).unwrap();
-        let res = get_delegation(&env, identity.sender().unwrap(), jwt, 0).unwrap_err();
+        let res = get_delegation(&env, session_principal, jwt, 0).unwrap_err();
 
         assert!(extract_trap_message(res).contains("IssuerMismatch"));
     }
@@ -311,7 +324,7 @@ fn test_get_delegation_wrong_claims() {
         let mut claims = claims.clone();
         claims.audiences = Some(Audiences::AsString("wrong".to_string()));
         let jwt = auth_provider_key_pair.sign(claims).unwrap();
-        let res = get_delegation(&env, identity.sender().unwrap(), jwt, 0).unwrap_err();
+        let res = get_delegation(&env, session_principal, jwt, 0).unwrap_err();
 
         assert!(extract_trap_message(res).contains("AudienceMismatch"));
     }
@@ -325,7 +338,7 @@ fn test_get_delegation_wrong_claims() {
 
         claims.issued_at = Some(issued_at - Duration::from_secs(MAX_IAT_AGE_SECONDS + 1));
         let jwt = auth_provider_key_pair.sign(claims).unwrap();
-        let res = get_delegation(&env, identity.sender().unwrap(), jwt, 0).unwrap_err();
+        let res = get_delegation(&env, session_principal, jwt, 0).unwrap_err();
 
         assert!(extract_trap_message(res).contains("IatTooOld"));
     }
@@ -339,7 +352,7 @@ fn test_get_delegation_wrong_claims() {
 
         claims.expires_at = Some(expires_at - Duration::from_secs(1));
         let jwt = auth_provider_key_pair.sign(claims).unwrap();
-        let res = get_delegation(&env, identity.sender().unwrap(), jwt, 0).unwrap_err();
+        let res = get_delegation(&env, session_principal, jwt, 0).unwrap_err();
 
         assert!(extract_trap_message(res).contains("TokenExpired"));
     }
