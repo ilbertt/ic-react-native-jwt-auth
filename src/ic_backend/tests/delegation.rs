@@ -11,12 +11,10 @@ use jwt_simple::prelude::*;
 
 use common::{
     auth_provider::{create_jwt, initialize_auth_provider},
-    canister::{get_delegation, initialize_canister, prepare_delegation},
+    canister::{extract_trap_message, get_delegation, initialize_canister, prepare_delegation},
     identity::{generate_random_identity, pk_to_hex},
     test_env::create_test_env,
 };
-
-use crate::common::canister::extract_trap_message;
 
 const NANOS_IN_SECONDS: u64 = 1_000_000_000;
 
@@ -282,4 +280,67 @@ fn test_get_delegation_anonymous() {
     let res = get_delegation(&env, Principal::anonymous(), jwt, 0).unwrap_err();
 
     assert!(extract_trap_message(res).contains("caller and token principal mismatch"));
+}
+
+#[test]
+fn test_get_delegation_wrong_claims() {
+    let env = create_test_env();
+    let (auth_provider_key_pair, jwks) = initialize_auth_provider();
+    initialize_canister(&env, jwks);
+
+    let identity = generate_random_identity();
+    let (_, claims) = create_jwt(
+        &auth_provider_key_pair,
+        "test_sub",
+        &pk_to_hex(&identity.public_key().unwrap()),
+        Duration::from_hours(JWT_VALID_FOR_HOURS),
+    );
+
+    // wrong issuer
+    {
+        let mut claims = claims.clone();
+        claims.issuer = Some("wrong".to_string());
+        let jwt = auth_provider_key_pair.sign(claims).unwrap();
+        let res = get_delegation(&env, identity.sender().unwrap(), jwt, 0).unwrap_err();
+
+        assert!(extract_trap_message(res).contains("IssuerMismatch"));
+    }
+
+    // wrong audience
+    {
+        let mut claims = claims.clone();
+        claims.audiences = Some(Audiences::AsString("wrong".to_string()));
+        let jwt = auth_provider_key_pair.sign(claims).unwrap();
+        let res = get_delegation(&env, identity.sender().unwrap(), jwt, 0).unwrap_err();
+
+        assert!(extract_trap_message(res).contains("AudienceMismatch"));
+    }
+
+    // iat too old
+    {
+        let mut claims = claims.clone();
+        let issued_at = claims.issued_at.unwrap();
+
+        env.set_canister_time(issued_at.into());
+
+        claims.issued_at = Some(issued_at - Duration::from_secs(MAX_IAT_AGE_SECONDS + 1));
+        let jwt = auth_provider_key_pair.sign(claims).unwrap();
+        let res = get_delegation(&env, identity.sender().unwrap(), jwt, 0).unwrap_err();
+
+        assert!(extract_trap_message(res).contains("IatTooOld"));
+    }
+
+    // expired
+    {
+        let mut claims = claims.clone();
+        let expires_at = claims.expires_at.unwrap();
+
+        env.set_canister_time(expires_at.into());
+
+        claims.expires_at = Some(expires_at - Duration::from_secs(1));
+        let jwt = auth_provider_key_pair.sign(claims).unwrap();
+        let res = get_delegation(&env, identity.sender().unwrap(), jwt, 0).unwrap_err();
+
+        assert!(extract_trap_message(res).contains("TokenExpired"));
+    }
 }

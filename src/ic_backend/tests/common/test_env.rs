@@ -64,7 +64,7 @@ impl TestEnv {
         self.controller
     }
 
-    /// Returns the current time of the canister in nanoseconds.
+    /// Returns the current time of the canister in nanoseconds since [SystemTime::UNIX_EPOCH].
     pub fn canister_time(&self) -> u64 {
         self.pic
             .get_time()
@@ -82,6 +82,15 @@ impl TestEnv {
         // produce and advance by some blocks to fire eventual timers
         // see https://forum.dfinity.org/t/pocketic-multi-subnet-canister-testing/24901/4
         for _ in 0..100 {
+            self.pic.tick();
+        }
+    }
+
+    /// Sets the canister time by specifying the duration elapsed from [SystemTime::UNIX_EPOCH].
+    pub fn set_canister_time(&self, elapsed: Duration) {
+        self.pic.set_time(SystemTime::UNIX_EPOCH + elapsed);
+        // produce and advance by some blocks to set the time correctly
+        for _ in 0..10 {
             self.pic.tick();
         }
     }
