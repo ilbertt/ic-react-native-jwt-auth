@@ -1,6 +1,5 @@
 name: ic_backend tests
 
-# only run when a commit is pushed to the main branch
 on:
   push:
     branches:
@@ -10,6 +9,24 @@ on:
       - main
 
 jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        shell: bash
+        run: rustup show
+
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: "true"
+          shared-key: "unit-tests"
+
+      - name: Run unit tests
+        run: ./scripts/unit-test.sh
+
   integration-tests:
     runs-on: ubuntu-latest
     steps:
