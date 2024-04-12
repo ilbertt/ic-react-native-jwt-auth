@@ -5,15 +5,16 @@ use std::time::SystemTime;
 use candid::Principal;
 use ic_agent::Identity;
 use ic_backend_types::{
-    Delegation, GetDelegationResponse, PrepareDelegationResponse, SignedDelegation,
+    GetDelegationResponse, PrepareDelegationResponse, SignedDelegation, UserKey,
 };
+use ic_representation_independent_hash::{representation_independent_hash, Value};
 use jwt_simple::prelude::*;
 
 use common::{
     auth_provider::{create_jwt, initialize_auth_provider},
     canister::{extract_trap_message, get_delegation, initialize_canister, prepare_delegation},
     identity::{generate_random_identity, pk_to_hex},
-    test_env::{create_test_env, upgrade_canister},
+    test_env::{create_test_env, upgrade_canister, TestEnv},
 };
 
 const NANOS_IN_SECONDS: u64 = 1_000_000_000;
@@ -22,6 +23,42 @@ const NANOS_IN_SECONDS: u64 = 1_000_000_000;
 const MAX_IAT_AGE_SECONDS: u64 = 10 * 60; // 10 minutes
 /// Same as on Auth0
 const JWT_VALID_FOR_HOURS: u64 = 10;
+
+fn verify_delegation(
+    env: &TestEnv,
+    user_key: UserKey,
+    signed_delegation: &SignedDelegation,
+    root_key: &[u8],
+) {
+    const DOMAIN_SEPARATOR: &[u8] = b"ic-request-auth-delegation";
+
+    // The signed message is a signature domain separator
+    // followed by the representation independent hash of a map with entries
+    // pubkey, expiration and targets (if any), using the respective values from the delegation.
+    // See https://internetcomputer.org/docs/current/references/ic-interface-spec#authentication for details
+    let key_value_pairs = vec![
+        (
+            "pubkey".to_string(),
+            Value::Bytes(signed_delegation.delegation.pubkey.clone().into_vec()),
+        ),
+        (
+            "expiration".to_string(),
+            Value::Number(signed_delegation.delegation.expiration),
+        ),
+    ];
+    let mut msg: Vec<u8> = Vec::from([(DOMAIN_SEPARATOR.len() as u8)]);
+    msg.extend_from_slice(DOMAIN_SEPARATOR);
+    msg.extend_from_slice(&representation_independent_hash(&key_value_pairs));
+
+    env.pic()
+        .verify_canister_signature(
+            msg,
+            signed_delegation.signature.clone().into_vec(),
+            user_key.into_vec(),
+            root_key.to_vec(),
+        )
+        .expect("delegation signature invalid");
+}
 
 #[test]
 fn test_prepare_delegation() {
@@ -234,24 +271,20 @@ fn test_get_delegation() {
         Duration::from_hours(JWT_VALID_FOR_HOURS),
     );
 
-    let PrepareDelegationResponse { expiration, .. } =
-        prepare_delegation(&env, session_principal, jwt.clone()).unwrap();
+    let PrepareDelegationResponse {
+        expiration,
+        user_key,
+    } = prepare_delegation(&env, session_principal, jwt.clone()).unwrap();
 
     let res = get_delegation(&env, session_principal, jwt, expiration).unwrap();
 
     match res {
-        GetDelegationResponse::SignedDelegation(SignedDelegation {
-            delegation:
-                Delegation {
-                    targets,
-                    pubkey,
-                    expiration,
-                },
-            ..
-        }) => {
-            assert_eq!(pubkey, session_public_key);
-            assert_eq!(expiration, expiration);
-            assert!(targets.is_none());
+        GetDelegationResponse::SignedDelegation(signed_delegation) => {
+            assert_eq!(signed_delegation.delegation.pubkey, session_public_key);
+            assert_eq!(signed_delegation.delegation.expiration, expiration);
+            assert!(signed_delegation.delegation.targets.is_none());
+
+            verify_delegation(&env, user_key, &signed_delegation, env.root_ic_key());
         }
         _ => panic!("Expected SignedDelegation"),
     }

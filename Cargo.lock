@@ -1264,6 +1264,7 @@ dependencies = [
  "ic-cdk 0.13.1",
  "ic-cdk-timers",
  "ic-certification",
+ "ic-representation-independent-hash",
  "ic-stable-structures",
  "ic_backend_types",
  "jsonwebtoken-rustcrypto",
