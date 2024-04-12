@@ -1,5 +1,4 @@
 mod delegation;
-mod hash;
 mod id_token;
 mod state;
 mod users;

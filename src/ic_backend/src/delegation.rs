@@ -1,7 +1,6 @@
-use std::collections::HashMap;
-
 use candid::Principal;
 use canister_sig_util::{
+    delegation_signature_msg, hash_bytes,
     signature_map::{SignatureMap, LABEL_SIG},
     CanisterSigPublicKey,
 };
@@ -10,10 +9,10 @@ use ic_backend_types::{
     UserSub,
 };
 use ic_cdk::{api::set_certified_data, id};
-use ic_certified_map::{labeled_hash, Hash};
+use ic_certification::{labeled_hash, Hash};
 use serde_bytes::ByteBuf;
 
-use crate::{hash, state};
+use crate::state;
 
 pub async fn prepare_delegation(
     user_sub: &UserSub,
@@ -37,11 +36,7 @@ pub fn get_delegation(
     expiration: Timestamp,
 ) -> GetDelegationResponse {
     state::signature_map(|sigs| {
-        let message_hash = delegation_signature_msg_hash(&Delegation {
-            pubkey: session_key.clone(),
-            expiration,
-            targets: None,
-        });
+        let message_hash = delegation_signature_msg_hash(&session_key, expiration);
         match sigs.get_signature_as_cbor(&calculate_seed(user_sub), message_hash, None) {
             Ok(signature) => GetDelegationResponse::SignedDelegation(SignedDelegation {
                 delegation: Delegation {
@@ -73,7 +68,7 @@ fn calculate_seed(user_sub: &UserSub) -> Hash {
     blob.push(user_sub_blob.len() as u8);
     blob.extend(user_sub_blob);
 
-    hash::hash_bytes(blob)
+    hash_bytes(blob)
 }
 
 fn update_root_hash() {
@@ -83,21 +78,9 @@ fn update_root_hash() {
     })
 }
 
-fn delegation_signature_msg_hash(d: &Delegation) -> Hash {
-    use hash::Value;
-
-    let mut m = HashMap::new();
-    m.insert("pubkey", Value::Bytes(d.pubkey.as_slice()));
-    m.insert("expiration", Value::U64(d.expiration));
-    if let Some(targets) = d.targets.as_ref() {
-        let mut arr = Vec::with_capacity(targets.len());
-        for t in targets.iter() {
-            arr.push(Value::Bytes(t.as_ref()));
-        }
-        m.insert("targets", Value::Array(arr));
-    }
-    let map_hash = hash::hash_of_map(m);
-    hash::hash_with_domain(b"ic-request-auth-delegation", &map_hash)
+fn delegation_signature_msg_hash(pubkey: &PublicKey, expiration: Timestamp) -> Hash {
+    let msg = delegation_signature_msg(pubkey, expiration, None);
+    hash_bytes(msg)
 }
 
 fn add_delegation_signature(
@@ -106,11 +89,7 @@ fn add_delegation_signature(
     seed: &[u8],
     expiration: Timestamp,
 ) {
-    let msg_hash = delegation_signature_msg_hash(&Delegation {
-        pubkey: pk,
-        expiration,
-        targets: None,
-    });
+    let msg_hash = delegation_signature_msg_hash(&pk, expiration);
     sigs.add_signature(seed, msg_hash);
 }
 
