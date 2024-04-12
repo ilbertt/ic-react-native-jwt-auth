@@ -92,6 +92,12 @@ See the `expo start` CLI [docs](https://docs.expo.dev/more/expo-cli/#develop) fo
 
 ## Testing
 
+Unit tests are available for the IC Rust backend canister. Simply run:
+
+```bash
+./scripts/unit-test.sh
+```
+
 Integration tests are available for the IC Rust backend canister. Simply run:
 
 ```bash
