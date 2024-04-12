@@ -159,6 +159,18 @@ fn set_jwks(jwks: Auth0JWKSet) {
     state::store_jwks(jwks)
 }
 
+#[query]
+// used in tests
+fn get_jwks() -> Option<Auth0JWKSet> {
+    let caller = caller();
+
+    if !is_controller(&caller) {
+        trap("caller is not a controller");
+    }
+
+    state::jwks(|jwks| jwks.clone())
+}
+
 // In the following, we register a custom getrandom implementation because
 // otherwise getrandom (which is a dependency of some packages) fails to compile.
 // This is necessary because getrandom by default fails to compile for the

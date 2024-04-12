@@ -56,3 +56,7 @@ pub fn sync_jwks(env: &TestEnv, sender: Principal) -> Result<(), CallError> {
 pub fn set_jwks(env: &TestEnv, sender: Principal, jwks: Auth0JWKSet) -> Result<(), CallError> {
     update_candid_as(env.pic(), env.canister_id(), sender, "set_jwks", (jwks,)).map(|(res,)| res)
 }
+
+pub fn get_jwks(env: &TestEnv, sender: Principal) -> Result<Option<Auth0JWKSet>, CallError> {
+    query_candid_as(env.pic(), env.canister_id(), sender, "get_jwks", ()).map(|(res,)| res)
+}

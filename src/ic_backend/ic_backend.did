@@ -51,4 +51,5 @@ service : {
     "authenticated" : () -> (AuthenticatedResponse) query;
     "sync_jwks" : () -> ();
     "set_jwks" : (Auth0JWKS) -> ();
+    "get_jwks" : () -> (opt Auth0JWKS) query;
 };
