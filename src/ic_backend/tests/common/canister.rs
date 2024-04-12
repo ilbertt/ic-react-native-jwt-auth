@@ -1,5 +1,7 @@
 use candid::Principal;
-use ic_backend_types::{Auth0JWKSet, GetDelegationResponse, PrepareDelegationResponse};
+use ic_backend_types::{
+    Auth0JWKSet, AuthenticatedResponse, GetDelegationResponse, PrepareDelegationResponse,
+};
 use pocket_ic::{query_candid_as, update_candid_as, CallError, ErrorCode, UserError};
 
 use super::test_env::TestEnv;
@@ -47,6 +49,10 @@ pub fn get_delegation(
         (jwt, expiration),
     )
     .map(|(res,)| res)
+}
+
+pub fn authenticated(env: &TestEnv, sender: Principal) -> Result<AuthenticatedResponse, CallError> {
+    query_candid_as(env.pic(), env.canister_id(), sender, "authenticated", ()).map(|(res,)| res)
 }
 
 pub fn sync_jwks(env: &TestEnv, sender: Principal) -> Result<(), CallError> {
