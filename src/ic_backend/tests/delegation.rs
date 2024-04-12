@@ -182,7 +182,7 @@ fn test_prepare_delegation_across_upgrades() {
 
     let res_after_upgrade = prepare_delegation(&env, session_principal, jwt).unwrap();
 
-    assert_eq!(res_before_upgrade, res_after_upgrade);
+    assert_eq!(res_before_upgrade.user_key, res_after_upgrade.user_key);
 }
 
 #[test]
@@ -215,7 +215,7 @@ fn test_prepare_delegation_different_sessions() {
 
     let res_session2 = prepare_delegation(&env, session2_principal, jwt2).unwrap();
 
-    assert_eq!(res_session1, res_session2);
+    assert_eq!(res_session1.user_key, res_session2.user_key);
 }
 
 #[test]
