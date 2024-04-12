@@ -189,16 +189,18 @@ The [canister_sig_util](https://github.com/dfinity/internet-identity/tree/releas
 
 ## Roadmap
 
-- [x] on the canister, periodically fetch the [JSON Web Key Sets (JWKS)](https://auth0.com/docs/secure/tokens/json-web-tokens/json-web-key-sets) from Auth0 using the [HTTPS outcalls](https://internetcomputer.org/docs/current/references/https-outcalls-how-it-works/) and [Timers](https://internetcomputer.org/docs/current/developer-docs/smart-contracts/advanced-features/periodic-tasks/) features.
+- [x] On the canister, periodically fetch the [JSON Web Key Sets (JWKS)](https://auth0.com/docs/secure/tokens/json-web-tokens/json-web-key-sets) from Auth0 using the [HTTPS outcalls](https://internetcomputer.org/docs/current/references/https-outcalls-how-it-works/) and [Timers](https://internetcomputer.org/docs/current/developer-docs/smart-contracts/advanced-features/periodic-tasks/) features.
 
     Right now, the JWKS are fetched at build time by the [build-canister.sh](./scripts/build-canister.sh) script, stored in `data/jwks.json` and imported in the canister as raw bytes at compile time ([source](https://github.com/ilbertt/ic-react-native-jwt-auth/blob/882539addd4e0e35fe1f1756701296f1ff085239/src/ic_backend/src/id_token.rs#L12)).
 
     Fetching the JWKS at runtime is needed because [JWK](https://datatracker.ietf.org/doc/html/rfc7517)s on Auth0 may rotate.
 
     Related issue: https://github.com/ilbertt/ic-react-native-jwt-auth/issues/1.
-- [x] tests (integration)
+- [x] Integration tests
 
-    Related PR: https://github.com/ilbertt/ic-react-native-jwt-auth/pull/2.
+    Related PRs:
+    - https://github.com/ilbertt/ic-react-native-jwt-auth/pull/2
+    - https://github.com/ilbertt/ic-react-native-jwt-auth/pull/3
 
 ## License
 
