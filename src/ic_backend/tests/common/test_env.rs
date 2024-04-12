@@ -81,7 +81,22 @@ pub fn create_test_env() -> TestEnv {
     TestEnv::new(wasm_module)
 }
 
-pub fn load_canister_wasm_from_path(path: &PathBuf) -> Vec<u8> {
+/// Simulates a canister upgrade, using the same wasm module.
+pub fn upgrade_canister(env: &TestEnv) {
+    let wasm_path = std::env::var("TEST_CANISTER_WASM_PATH").unwrap();
+    let wasm_module = load_canister_wasm_from_path(&PathBuf::from(wasm_path));
+
+    env.pic()
+        .upgrade_canister(
+            env.canister_id(),
+            wasm_module,
+            candid::encode_args(()).unwrap(),
+            Some(env.controller()),
+        )
+        .unwrap();
+}
+
+fn load_canister_wasm_from_path(path: &PathBuf) -> Vec<u8> {
     let mut file = File::open(&path)
         .unwrap_or_else(|_| panic!("Failed to open file: {}", path.to_str().unwrap()));
     let mut bytes = Vec::new();

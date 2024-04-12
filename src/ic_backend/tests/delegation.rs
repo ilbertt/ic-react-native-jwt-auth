@@ -13,7 +13,7 @@ use common::{
     auth_provider::{create_jwt, initialize_auth_provider},
     canister::{extract_trap_message, get_delegation, initialize_canister, prepare_delegation},
     identity::{generate_random_identity, pk_to_hex},
-    test_env::create_test_env,
+    test_env::{create_test_env, upgrade_canister},
 };
 
 const NANOS_IN_SECONDS: u64 = 1_000_000_000;
@@ -157,6 +157,65 @@ fn test_prepare_delegation_wrong_claims() {
 
         assert!(extract_trap_message(res).contains("TokenExpired"));
     }
+}
+
+#[test]
+fn test_prepare_delegation_across_upgrades() {
+    let env = create_test_env();
+    let (auth_provider_key_pair, jwks) = initialize_auth_provider();
+    initialize_canister(&env, jwks.clone());
+
+    let session_identity = generate_random_identity();
+    let session_principal = session_identity.sender().unwrap();
+    let session_public_key = session_identity.public_key().unwrap();
+    let (jwt, _) = create_jwt(
+        &auth_provider_key_pair,
+        "test_sub",
+        &pk_to_hex(&session_public_key),
+        Duration::from_hours(JWT_VALID_FOR_HOURS),
+    );
+
+    let res_before_upgrade = prepare_delegation(&env, session_principal, jwt.clone()).unwrap();
+
+    upgrade_canister(&env);
+    initialize_canister(&env, jwks);
+
+    let res_after_upgrade = prepare_delegation(&env, session_principal, jwt).unwrap();
+
+    assert_eq!(res_before_upgrade, res_after_upgrade);
+}
+
+#[test]
+fn test_prepare_delegation_different_sessions() {
+    let env = create_test_env();
+    let (auth_provider_key_pair, jwks) = initialize_auth_provider();
+    initialize_canister(&env, jwks.clone());
+
+    let session1_identity = generate_random_identity();
+    let session1_principal = session1_identity.sender().unwrap();
+    let session1_public_key = session1_identity.public_key().unwrap();
+    let (jwt1, _) = create_jwt(
+        &auth_provider_key_pair,
+        "test_sub",
+        &pk_to_hex(&session1_public_key),
+        Duration::from_hours(JWT_VALID_FOR_HOURS),
+    );
+
+    let res_session1 = prepare_delegation(&env, session1_principal, jwt1).unwrap();
+
+    let session2_identity = generate_random_identity();
+    let session2_principal = session2_identity.sender().unwrap();
+    let session2_public_key = session2_identity.public_key().unwrap();
+    let (jwt2, _) = create_jwt(
+        &auth_provider_key_pair,
+        "test_sub",
+        &pk_to_hex(&session2_public_key),
+        Duration::from_hours(JWT_VALID_FOR_HOURS),
+    );
+
+    let res_session2 = prepare_delegation(&env, session2_principal, jwt2).unwrap();
+
+    assert_eq!(res_session1, res_session2);
 }
 
 #[test]
