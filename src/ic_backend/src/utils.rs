@@ -15,7 +15,7 @@ pub fn unix_timestamp() -> u64 {
 
 pub fn base64_decode(input: &str) -> IdTokenResult<Vec<u8>> {
     let engine = general_purpose::URL_SAFE_NO_PAD;
-    engine.decode(input).map_err(|e| ErrorKind::Base64(e))
+    engine.decode(input).map_err(ErrorKind::Base64)
 }
 
 pub fn principal_to_blob(principal: Principal) -> Blob<29> {

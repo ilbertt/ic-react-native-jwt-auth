@@ -99,10 +99,8 @@ pub fn decode(token: &str, expected_alg: Algorithm) -> IdTokenResult<IdToken> {
         return Err(ErrorKind::InvalidSignature);
     }
 
-    let decoded_claims =
-        String::from_utf8(base64_decode(claims.as_ref())?).map_err(|e| ErrorKind::Utf8(e))?;
-    let claims: JWTClaims =
-        serde_json::from_str(&decoded_claims).map_err(|e| ErrorKind::Json(e))?;
+    let decoded_claims = String::from_utf8(base64_decode(claims)?).map_err(ErrorKind::Utf8)?;
+    let claims: JWTClaims = serde_json::from_str(&decoded_claims).map_err(ErrorKind::Json)?;
 
     Ok(IdToken { header, claims })
 }

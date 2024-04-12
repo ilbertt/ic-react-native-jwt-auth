@@ -18,18 +18,10 @@ pub const EMPTY_SALT: Salt = [0; 32];
 // fetch JWKS every 1 hour
 const JWKS_FETCH_INTERVAL: Duration = Duration::from_secs(60 * 60);
 
+#[derive(Default)]
 pub struct State {
     pub sigs: SignatureMap,
     pub jwks: Option<Auth0JWKSet>,
-}
-
-impl Default for State {
-    fn default() -> Self {
-        Self {
-            sigs: SignatureMap::default(),
-            jwks: None,
-        }
-    }
 }
 
 pub async fn init() {
@@ -92,7 +84,7 @@ pub async fn fetch_and_store_jwks() -> Result<(), String> {
         serde_json::from_slice(&res.body).map_err(|e| format!("Error parsing JWKS: {:?}", e))?;
     store_jwks(jwks.clone());
 
-    print(&format!(
+    print(format!(
         "Fetched JWKS. JSON Web Keys available: {}",
         jwks.keys.len()
     ));
