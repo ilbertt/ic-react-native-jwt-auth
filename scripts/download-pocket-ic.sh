@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 cd bin/
 
 POCKET_IC_BIN=pocket-ic
@@ -17,7 +19,7 @@ else
         echo "Unsupported OS: $OSTYPE"
         exit 1
     fi
-    curl -sL -o $POCKET_IC_BIN.gz https://github.com/dfinity/pocketic/releases/latest/download/pocket-ic-x86_64-$ARCH.gz
+    curl -sL -o $POCKET_IC_BIN.gz https://github.com/dfinity/pocketic/releases/download/3.0.1/pocket-ic-x86_64-$ARCH.gz
 
     echo "Extracting Pocket IC binary..."
     gzip -d $POCKET_IC_BIN.gz
