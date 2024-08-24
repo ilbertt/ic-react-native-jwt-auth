@@ -87,15 +87,19 @@ pub fn decode(token: &str, expected_alg: Algorithm) -> IdTokenResult<IdToken> {
     let jwks = state::jwks(|s| s.clone().ok_or(ErrorKind::NoWorkingKey))?;
 
     let header = decode_header(token).map_err(|e| e.into_kind())?;
-    let key_id = header.kid.as_ref().unwrap();
+    let key_id = header.jwk_set_headers.kid.as_ref().unwrap();
     let jwk = jwks.find_key(key_id).unwrap();
     let key = DecodingKey::from_rsa_components(&jwk.n, &jwk.e).map_err(|e| e.into_kind())?;
+    let header_alg = header
+        .general_headers
+        .alg
+        .ok_or(ErrorKind::InvalidAlgorithm)?;
 
-    if expected_alg != header.alg {
+    if expected_alg != header_alg {
         return Err(ErrorKind::InvalidAlgorithm);
     }
 
-    if !verify(signature, message, &key, header.alg).map_err(|e| e.into_kind())? {
+    if !verify(signature, message, &key, header_alg).map_err(|e| e.into_kind())? {
         return Err(ErrorKind::InvalidSignature);
     }
 

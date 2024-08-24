@@ -10,28 +10,28 @@ crate-type = ["cdylib"]
 
 [dependencies]
 candid.workspace = true
-ic-cdk = "0.13"
-ic-cdk-timers = "0.7"
+ic-cdk = "0.15"
+ic-cdk-timers = "0.9"
 ic-stable-structures = "0.6"
-ic-certification = "2.5"
-canister_sig_util = { git = "https://github.com/dfinity/internet-identity", tag = "release-2024-04-05" }
+ic-certification = "2.6"
+canister_sig_util = { git = "https://github.com/dfinity/internet-identity", tag = "release-2024-08-21" }
 
 serde.workspace = true
 serde_json = "1.0"
 serde_bytes.workspace = true
 
-jsonwebtoken-rustcrypto = "1.2"
+jsonwebtoken-rustcrypto = { git = "https://github.com/ilbertt/jsonwebtoken" }
 hex = "0.4"
 getrandom = { version = "0.2", features = ["custom"] }
-base64 = "0.21.0"
-sha2 = "0.10.8"
+base64 = "0.22"
+sha2 = "0.10"
 
 ic_backend_types.workspace = true
 
 [dev-dependencies]
-hex-literal = "0.2.1"
-pocket-ic = "2.2"
+hex-literal = "0.4"
+pocket-ic = "4.0"
 jwt-simple = "0.12"
-ic-agent = "0.34"
+ic-agent = "0.37"
 ring = "0.17"
-ic-representation-independent-hash = "2.5"
+ic-representation-independent-hash = "2.6"
